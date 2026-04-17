@@ -103,27 +103,34 @@ ax_abs.text(0.02, 0.97, 'ABSTRACT',
     transform=ax_abs.transAxes,
     fontsize=8.5, fontweight='bold', color=GREEN, va='top')
 
+adaptive = rf['Proposed_Adaptive']
+periodic = rf['Fixed_Periodic']
+p_val    = rf['_p_value']
+d_val    = rf['_cohen_d']
+gap_pp   = adaptive['ECR'] - rf['Pure_Random']['ECR']
+
 abstract = (
     "Acoustic event detection on embedded edge devices faces a fundamental tension: continuous recording "
-    "overflows flash storage, while detection-only logging loses event context. We present a simulation "
-    "framework that treats the circular buffer as a 2D scientific variable — independently sweeping "
-    "pre-event (0–2 s) and post-event (0–4 s) buffer sizes — and evaluates five strategies: Store-All, "
+    "overflows flash storage, while detection-only logging loses surrounding event context. We present a "
+    "simulation framework that treats the circular buffer as a 2D scientific variable — independently "
+    "sweeping pre-event (0–2 s) and post-event (0–4 s) buffer sizes — across five strategies: Store-All, "
     "Detect-Only, Fixed Periodic, Pure Random, and Proposed Adaptive. Experiments run under physically "
-    "grounded streaming conditions (Poisson arrivals, SNR=10 dB, 30% overlap). Key finding: Proposed "
-    "Adaptive achieves ECR=97.7% at DRR=73.5%, vs 14.3% ECR for Fixed Periodic at the same storage "
-    "budget. The intelligence gap over Pure Random is +31.8 pp (p=0.0004, Cohen's d=2.59)."
+    f"grounded streaming (Poisson arrivals, SNR=10 dB, 30% overlap). Under realistic streaming, Proposed "
+    f"Adaptive achieves ECR={adaptive['ECR']:.1f}% at DRR={adaptive['DRR']:.1f}%, vs "
+    f"ECR={periodic['ECR']:.1f}% for Fixed Periodic at the same storage budget. "
+    f"Intelligence gap over Pure Random: +{gap_pp:.1f} pp (p={p_val:.4f}, Cohen's d={d_val:.2f}). "
+    "In the isolated buffer sweep (clean stream), the optimal 1s/1s configuration achieves ECR=97.7%."
 )
 ax_abs.text(0.02, 0.85, abstract,
     transform=ax_abs.transAxes,
     fontsize=8, color=BODY, va='top', linespacing=1.55, wrap=True)
 
 # 4 key numbers
-adaptive = rf['Proposed_Adaptive']
 kn = [
     (f"{adaptive['ECR']:.0f}%",  'ECR\n(Proposed Adaptive)'),
     (f"{adaptive['DRR']:.0f}%",  'Data Reduction\n(Proposed Adaptive)'),
-    ('+31.8pp',                   'ECR over\nPure Random'),
-    ('p=0.0004',                  'Statistical\nSignificance'),
+    (f'+{gap_pp:.1f}pp',           'ECR over\nPure Random'),
+    (f'p={p_val:.4f}',            'Statistical\nSignificance'),
 ]
 for i, (val, lbl) in enumerate(kn):
     x = 0.13 + i * 0.25
@@ -204,8 +211,8 @@ ax_c1.text(0.04, 0.82,
     '    post-event saturates past 1 s.\n'
     '2. Adaptive achieves Pareto-optimal\n'
     '    region with 95% CI overlap.\n'
-    '3. Intelligence gap vs. random:\n'
-    '    +31.8 pp (p=0.0004, d=2.59).',
+    f'3. Intelligence gap vs. random:\n'
+    f'    +{gap_pp:.1f} pp (p={p_val:.4f}, d={d_val:.2f}).',
     transform=ax_c1.transAxes,
     fontsize=7.2, color=BODY, va='top', linespacing=1.45)
 

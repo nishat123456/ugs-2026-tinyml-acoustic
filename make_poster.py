@@ -25,7 +25,12 @@ OUT     = os.path.join(BASE, 'poster_ugs2026.png')
 with open(os.path.join(RES, 'winner_metrics.json')) as f:
     winner = json.load(f)['RandomForest']
 
-rf = winner  # alias
+rf       = winner  # alias
+adaptive = rf['Proposed_Adaptive']
+periodic = rf['Fixed_Periodic']
+p_val    = rf['_p_value']
+d_val    = rf['_cohen_d']
+gap_pp   = adaptive['ECR'] - rf['Pure_Random']['ECR']
 
 # ── Palette ──────────────────────────────────────────────────────────────────
 BG       = '#FFFFFF'
@@ -296,8 +301,8 @@ ax_comp = fig.add_subplot(right2[1])
 clean(ax_comp, bg=OFFWHITE)
 sec(ax_comp, '08   SYSTEM COMPARISON', size=50)
 ax_comp.text(0.04, 0.90,
-    'Fixed Periodic (storage-matched) captures only\n'
-    '~14% of events vs. 97.7% for Proposed Adaptive.',
+    'Circular Buffer 1s/1s captures ~94% of events;\n'
+    'Fixed Periodic (same storage) captures only ~10%.',
     transform=ax_comp.transAxes,
     fontsize=26, color=MUTED, va='top', linespacing=1.5, zorder=5)
 show_img(ax_comp, 'fig2_drr_ecr_comparison.png', x0=0.02, x1=0.98, y0=0.06, y1=0.84)
@@ -315,16 +320,12 @@ ax_ft.plot([0, 1], [1, 1], color=GREEN, lw=10,
            transform=ax_ft.transAxes, clip_on=False)
 
 # ── 4 stat callouts (left 75%) ────────────────────────────────────────────────
-adaptive = rf['Proposed_Adaptive']
-detect   = rf['Detect-Only']
-periodic = rf['Fixed_Periodic']
-p_val    = rf['_p_value']
-d_val    = rf['_cohen_d']
+detect = rf['Detect-Only']
 
 stats = [
-    (f"{adaptive['ECR']:.0f}%",     'ECR — Proposed Adaptive\n(vs 14% Fixed Periodic)'),
-    (f"{adaptive['DRR']:.0f}%",     'Data Reduction Ratio\n(Proposed Adaptive)'),
-    ('+31.8pp',                      'ECR over Pure Random\n(same storage budget)'),
+    (f"{adaptive['ECR']:.0f}%",          'ECR — Proposed Adaptive\n(realistic streaming)'),
+    (f"{adaptive['DRR']:.0f}%",          'Data Reduction Ratio\n(Proposed Adaptive)'),
+    (f"+{gap_pp:.1f}pp",                 'ECR over Pure Random\n(same storage budget)'),
     (f"p={p_val:.4f}",              f'Statistical Significance\n(Cohen\'s d = {d_val:.2f})'),
 ]
 
