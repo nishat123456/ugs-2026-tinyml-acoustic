@@ -3,7 +3,7 @@
 
 **USM Undergraduate Symposium 2026**
 
-**Authors:** M M Nishat, Dikshant Aryal, Sujjal Chapagain
+**Authors:** Dikshant Aryal, M M Nishat, Sujjal Chapagain
 
 ---
 
