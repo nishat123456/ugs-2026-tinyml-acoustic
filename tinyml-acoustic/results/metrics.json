@@ -1,80 +1,58 @@
 {
-  "model": {
-    "accuracy": 0.825,
-    "precision": 0.6923,
-    "recall": 0.75,
-    "f1": 0.72
+  "model_metrics": {
+    "accuracy": 0.9944444444444445,
+    "precision": 1.0,
+    "recall": 0.9814814814814815,
+    "f1": 0.9906542056074766
   },
-  "systems": [
+  "stream_metrics": [
     {
-      "system": "Baseline A: Store-All",
-      "saved_clips": 400,
-      "saved_seconds": 2000,
-      "total_seconds": 2000,
+      "system": "Store-All (A)",
       "DRR": 0.0,
       "ECR": 1.0,
-      "FPR": 1.0,
-      "PPV": 0.3,
-      "TP": 120,
-      "FP": 280,
-      "FN": 0,
-      "TN": 0
+      "saved": 3599
     },
     {
-      "system": "Baseline B: Detect-Only (B=0)",
-      "saved_clips": 122,
-      "saved_seconds": 610,
-      "total_seconds": 2000,
-      "DRR": 0.695,
-      "ECR": 0.95,
-      "FPR": 0.0286,
-      "PPV": 0.9344,
-      "TP": 114,
-      "FP": 8,
-      "FN": 6,
-      "TN": 272
+      "system": "Detect-Only (B)",
+      "DRR": 0.8860794665184774,
+      "ECR": 0.76,
+      "saved": 410
     },
     {
-      "system": "Random Baseline (same budget)",
-      "saved_clips": 122,
-      "saved_seconds": 610,
-      "total_seconds": 2000,
-      "DRR": 0.695,
-      "ECR": 0.325,
-      "FPR": 0.2964,
-      "PPV": 0.3197,
-      "TP": 39,
-      "FP": 83,
-      "FN": 81,
-      "TN": 197
+      "system": "Fixed Periodic (C)",
+      "DRR": 0.8860794665184774,
+      "ECR": 0.10333333333333333,
+      "saved": 410
     },
     {
-      "system": "Circular Buffer B=1 (Proposed)",
-      "saved_clips": 215,
-      "saved_seconds": 1075,
-      "total_seconds": 2000,
-      "DRR": 0.4625,
-      "ECR": 0.9667,
-      "FPR": 0.3536,
-      "PPV": 0.5395,
-      "TP": 116,
-      "FP": 99,
-      "FN": 4,
-      "TN": 181
+      "system": "Buffer (pre=0.5s, post=0.5s)",
+      "DRR": 0.8274520700194499,
+      "ECR": 0.8933333333333333,
+      "saved": 621
     },
     {
-      "system": "Circular Buffer B=2",
-      "saved_clips": 276,
-      "saved_seconds": 1380,
-      "total_seconds": 2000,
-      "DRR": 0.31,
-      "ECR": 0.975,
-      "FPR": 0.5679,
-      "PPV": 0.4239,
-      "TP": 117,
-      "FP": 159,
-      "FN": 3,
-      "TN": 121
+      "system": "Buffer (pre=1.0s, post=1.0s)",
+      "DRR": 0.7796610169491526,
+      "ECR": 0.9433333333333334,
+      "saved": 793
+    },
+    {
+      "system": "Buffer (pre=1.0s, post=2.0s)",
+      "DRR": 0.7379827729924979,
+      "ECR": 0.9533333333333334,
+      "saved": 943
+    },
+    {
+      "system": "Buffer (pre=2.0s, post=3.0s)",
+      "DRR": 0.6621283689913865,
+      "ECR": 0.96,
+      "saved": 1216
+    },
+    {
+      "system": "Adaptive Buffer (Confidence-Weighted)",
+      "DRR": 0.7354820783550986,
+      "ECR": 0.9533333333333334,
+      "saved": 952
     }
   ]
 }
