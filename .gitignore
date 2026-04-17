@@ -22,3 +22,7 @@ __pycache__/
 # Office temp files
 ~$*.docx
 ~$*.pptx
+~$*.ppt
+
+# Claude Code
+.claude/

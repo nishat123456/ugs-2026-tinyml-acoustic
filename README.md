@@ -1,57 +1,128 @@
-# TinyML Acoustic Monitoring — USM Undergraduate Symposium 2026
+# Event-Triggered Acoustic Monitoring via Circular Buffer Simulation
+### A TinyML Framework for Edge Deployment
 
-**Author:** M M Nishat  
-**Event:** USM Undergraduate Symposium 2026
+**USM Undergraduate Symposium 2026**
+
+**Authors:** Dikshant Aryal, M M Nishat, Sujjal Chapagain
+
+---
+
+![Poster](poster_ugs2026.png)
+
+---
 
 ## Overview
 
-End-to-end simulation framework for **event-triggered acoustic monitoring** using TinyML techniques applied to the ESC-50 dataset. Demonstrates how a circular buffer strategy dramatically reduces storage requirements on edge devices while preserving high event capture rates.
+Continuous ecological acoustic monitoring exhausts edge device storage and battery life in off-grid environments like De Soto National Forest. Recording only the exact trigger moment discards critical contextual audio needed by researchers.
 
-## Pipeline
+This project simulates a **circular buffer strategy** on top of a TinyML event detector to quantify the storage vs. event-preservation trade-off. We show that a **1-second pre/post buffer** achieves near-optimal utility under realistic streaming conditions.
+
+**Key finding:** A 1s/1s circular buffer reduces storage by **87%** while preserving **78%** of sound events — and an intelligent detector outperforms random selection by **+31.8 percentage points** (p=0.0004, d=2.59).
+
+---
+
+## Results
+
+Evaluated over 10 repetitions at 10 dB SNR, 30% event overlap (realistic streaming conditions):
+
+| System | DRR | ECR |
+|---|---|---|
+| Store-All (Baseline) | 0.0% | 100.0% |
+| Detect-Only (No Buffer) | 94.6% | 74.8% |
+| Fixed Periodic (Storage-Matched) | 94.6% | 52.7% |
+| Pure Random (Storage-Matched) | 94.6% | 45.7% |
+| **Circular Buffer — Proposed 1s/1s** | **87.3%** | **77.6%** |
+
+- **DRR** (Data Reduction Ratio): fraction of audio discarded — higher = less storage used
+- **ECR** (Event Capture Rate): fraction of true sound events preserved — higher = better
+
+**Intelligence gap:** Proposed Adaptive vs. Pure Random = +31.8 pp ECR (p=0.0004, Cohen's d=2.59)
+
+---
+
+## Repository Structure
 
 ```
-ESC-50 Dataset → MFCC Feature Extraction → Random Forest Classifier
-→ Multi-System Simulation → Evaluation Metrics → Figures
+.
+├── tinyml-acoustic/
+│   ├── pipeline.py          # Full ML pipeline: training, simulation, evaluation
+│   ├── playlist_engine.py   # Realistic stream generator (SNR, overlap, augmentation)
+│   ├── physics_model.py     # Edge hardware resource model (SRAM, Flash, MACs)
+│   ├── figures/             # Generated output figures
+│   └── results/             # JSON metrics from each pipeline run
+│       ├── winner_metrics.json    # Final results — realistic streaming (10 runs)
+│       ├── stability_metrics.json # Buffer sweep results
+│       └── metrics.json           # Single-run classifier metrics
+├── make_figures.py          # Regenerate all figures from saved JSON (no retraining needed)
+├── make_poster.py           # Generate poster_ugs2026.png
+├── make_handout.py          # Generate handout_ugs2026.png
+├── poster_ugs2026.png       # Final symposium poster
+└── handout_ugs2026.png      # QR handout
 ```
 
-## Key Results
+---
 
-| System | DRR | ECR | FPR | PPV |
-|---|---|---|---|---|
-| Store-All (Baseline A) | 0.0% | 100.0% | 100.0% | 30.0% |
-| Detect-Only / B=0 (Baseline B) | 69.5% | 95.0% | 2.9% | 93.4% |
-| Random Baseline (same budget) | 69.5% | 32.5% | 29.6% | 32.0% |
-| **Circular Buffer B=1 (Proposed)** | **46.2%** | **96.7%** | **35.4%** | **53.9%** |
-| Circular Buffer B=2 | 31.0% | 97.5% | 56.8% | 42.4% |
+## Setup & Run
 
-**Key Finding:** Intelligence gap — Detector vs Random at same 122-clip budget: +62.5pp ECR (95.0% vs 32.5%).
+### 1. Download ESC-50
 
-## Setup
-
-### 1. Download the ESC-50 dataset
 ```bash
-# Clone ESC-50 into tinyml-acoustic/data/
 git clone https://github.com/karolpiczak/ESC-50 tinyml-acoustic/data/ESC-50-master
 ```
 
-### 2. Create and activate virtual environment
+### 2. Create virtual environment
+
 ```bash
 cd tinyml-acoustic
 python3 -m venv venv
 source venv/bin/activate
-pip install numpy pandas librosa scikit-learn matplotlib seaborn tqdm
+pip install numpy pandas librosa scikit-learn matplotlib seaborn scipy tqdm joblib reportlab
 ```
 
-### 3. Run the pipeline
+### 3. Run the full pipeline (trains model + runs simulations)
+
 ```bash
-"tinyml-acoustic/venv/bin/python3" "tinyml-acoustic/pipeline.py"
+python3 tinyml-acoustic/pipeline.py
 ```
 
-Output figures are saved to `tinyml-acoustic/figures/` and metrics to `tinyml-acoustic/results/metrics.json`.
+Output: figures saved to `tinyml-acoustic/figures/`, metrics to `tinyml-acoustic/results/`.
 
-## Metrics Glossary
+### 4. Regenerate figures only (no retraining)
 
-- **DRR** — Data Reduction Ratio: fraction of audio *not* stored
-- **ECR** — Event Capture Rate: fraction of true events saved (recall at system level)
-- **FPR** — False Positive Rate: fraction of non-events saved unnecessarily
-- **PPV** — Positive Predictive Value: precision at system level
+```bash
+python3 make_figures.py
+```
+
+### 5. Regenerate poster and handout
+
+```bash
+python3 make_poster.py
+python3 make_handout.py
+```
+
+---
+
+## Pipeline
+
+```
+ESC-50 Dataset
+    → Continuous Stream Simulation (PlaylistEngine — SNR, overlap, augmentation)
+    → MFCC + Delta Feature Extraction (1s window, 0.5s hop, 40 coefficients)
+    → Random Forest Classifier (100 estimators, depth 12, class-balanced)
+    → Multi-System Evaluation (Store-All, Detect-Only, Fixed Periodic, Pure Random, Proposed Adaptive)
+    → Bootstrap CI (1000 resamples, 10 runs) + Mann-Whitney U significance test
+    → Figures + JSON metrics
+```
+
+---
+
+## Citation
+
+```
+Aryal, D., Nishat, M. M., & Chapagain, S. (2026).
+Event-Triggered Acoustic Monitoring via Circular Buffer Simulation:
+A TinyML Framework for Edge Deployment.
+USM Undergraduate Symposium 2026.
+```
+
+Dataset: [ESC-50](https://github.com/karolpiczak/ESC-50) — Piczak, K. J. (2015)
