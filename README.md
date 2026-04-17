@@ -3,7 +3,7 @@
 
 **USM Undergraduate Symposium 2026**
 
-**Authors:** Dikshant Aryal, M M Nishat, Sujjal Chapagain
+**Authors:** M M Nishat, Dikshant Aryal, Sujjal Chapagain
 
 ---
 
@@ -119,7 +119,7 @@ ESC-50 Dataset
 ## Citation
 
 ```
-Aryal, D., Nishat, M. M., & Chapagain, S. (2026).
+Nishat, M. M., Aryal, D., & Chapagain, S. (2026).
 Event-Triggered Acoustic Monitoring via Circular Buffer Simulation:
 A TinyML Framework for Edge Deployment.
 USM Undergraduate Symposium 2026.
