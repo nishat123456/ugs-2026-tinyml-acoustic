@@ -121,7 +121,7 @@ ax_h.text(0.5, 0.82,
     ha='center', va='top', linespacing=1.18)
 
 ax_h.text(0.5, 0.22,
-    'M M Nishat   ·   Dept. of Computer Science, University of Southern Mississippi   ·   Hattiesburg, MS',
+    'M M Nishat   ·   Dikshant Aryal   ·   Sujjal Chapagain   ·   Dept. of Computer Science, University of Southern Mississippi',
     transform=ax_h.transAxes,
     fontsize=36, color='#AAB7B8', ha='center', va='top')
 
@@ -368,8 +368,10 @@ ax_ft.text(0.760, 0.14,
     fontsize=19, color='#566573', va='top')
 
 ax_ft.text(0.025, 0.07,
-    'ESC-50: Piczak (2015)  ·  Classifier: scikit-learn RF  ·  '
-    'Framework: PlaylistEngine (Poisson stream sim)',
+    '[1] Piczak, K.J. (2015). ESC: Dataset for Environmental Sound Classification. ACM Multimedia.  '
+    '[2] Breiman, L. (2001). Random Forests. Machine Learning, 45(1), 5–32.  '
+    '[3] Pedregosa et al. (2011). Scikit-learn: Machine Learning in Python. JMLR, 12, 2825–2830.  '
+    '[4] McFee et al. (2015). librosa: Audio and Music Signal Analysis in Python. SciPy Conf.',
     transform=ax_ft.transAxes,
     fontsize=19, color='#566573', va='top')
 

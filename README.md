@@ -7,7 +7,7 @@
 
 ---
 
-![Poster](poster_ugs2026.png)
+![Poster](Event-Triggered%20Acoustic%20Monitoring%20Poster.png)
 
 ---
 
@@ -124,5 +124,17 @@ Event-Triggered Acoustic Monitoring via Circular Buffer Simulation:
 A TinyML Framework for Edge Deployment.
 USM Undergraduate Symposium 2026.
 ```
+
+---
+
+## References
+
+[1] Piczak, K. J. (2015). ESC: Dataset for Environmental Sound Classification. *Proceedings of the 23rd ACM International Conference on Multimedia*, 1015–1018.
+
+[2] Breiman, L. (2001). Random Forests. *Machine Learning*, 45(1), 5–32.
+
+[3] Pedregosa, F., et al. (2011). Scikit-learn: Machine Learning in Python. *Journal of Machine Learning Research*, 12, 2825–2830.
+
+[4] McFee, B., et al. (2015). librosa: Audio and Music Signal Analysis in Python. *Proceedings of the 14th Python in Science Conference (SciPy)*, 18–25.
 
 Dataset: [ESC-50](https://github.com/karolpiczak/ESC-50) — Piczak, K. J. (2015)
