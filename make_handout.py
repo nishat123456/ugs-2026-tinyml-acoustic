@@ -1,215 +1,244 @@
 """
-make_handout.py — USM Undergraduate Symposium 2026
-Generates a single-page printable handout as a PNG (Letter: 8.5" × 11").
+make_handout.py  —  USM Undergraduate Symposium 2026
+8.5" × 11" Letter, white background, print-ready.
 
-Run from this directory:
-    python3 make_handout.py
-
-Output: handout_ugs2026.png  (850 × 1100 px @ 100 dpi, prints to Letter)
+Run:
+    tinyml-acoustic/venv/bin/python3 make_handout.py
+Output:
+    handout_ugs2026.png  (850 × 1100 px @ 100 dpi)
 """
 
 import os, json
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import matplotlib.image as mpimg
 import matplotlib.gridspec as gridspec
 from matplotlib.patches import FancyBboxPatch
 
-BASE    = os.path.dirname(os.path.abspath(__file__))
-FIG_DIR = os.path.join(BASE, 'tinyml-acoustic', 'figures')
-RES     = os.path.join(BASE, 'tinyml-acoustic', 'results', 'metrics.json')
-OUT     = os.path.join(BASE, 'handout_ugs2026.png')
+BASE  = os.path.dirname(os.path.abspath(__file__))
+FIGS  = os.path.join(BASE, 'tinyml-acoustic', 'figures')
+RES   = os.path.join(BASE, 'tinyml-acoustic', 'results')
+OUT   = os.path.join(BASE, 'handout_ugs2026.png')
 
-with open(RES) as f:
-    data = json.load(f)
-model   = data['model']
-systems = data['systems']
-sysA, sysB, sysRand, sysC1, sysC2 = systems
+with open(os.path.join(RES, 'winner_metrics.json')) as f:
+    rf = json.load(f)['RandomForest']
 
-# Colours — white/light for printing
-C_BG     = '#FFFFFF'
-C_ACCENT = '#1A7C3E'   # dark green — prints well
-C_BLUE   = '#1A5276'
-C_RED    = '#922B21'
-C_HEADER = '#1A252F'
-C_BODY   = '#212121'
-C_MUTED  = '#555555'
-C_PANEL  = '#F4F6F7'
-C_GOLD   = '#7D6608'
+# ── Palette ──────────────────────────────────────────────────────────────────
+BG      = '#FFFFFF'
+OFFWHITE= '#F7F9F9'
+NAVY    = '#17202A'
+GREEN   = '#1A7C3E'
+DKGREEN = '#145A2E'
+LTGREEN = '#EAF4EE'
+BLUE    = '#1A5276'
+BODY    = '#1C2833'
+MUTED   = '#5D6D7E'
+RULE    = '#D5D8DC'
+GOLD    = '#7D6608'
+LTGOLD  = '#FEF9E7'
+WHITE   = '#FFFFFF'
 
 DPI = 100
-fig = plt.figure(figsize=(8.5, 11), dpi=DPI, facecolor=C_BG)
 
-gs = gridspec.GridSpec(
-    5, 2,
-    figure=fig,
-    height_ratios=[1.1, 2.8, 2.8, 2.4, 0.9],
-    width_ratios=[1, 1],
-    hspace=0.10, wspace=0.07,
-    left=0.04, right=0.96,
-    top=0.97, bottom=0.03,
-)
+def load(fname):
+    return mpimg.imread(os.path.join(FIGS, fname))
 
-def no_ticks(ax):
+def clean(ax, bg=BG):
+    ax.set_facecolor(bg)
+    ax.set_xlim(0, 1); ax.set_ylim(0, 1)
     ax.set_xticks([]); ax.set_yticks([])
     for s in ax.spines.values(): s.set_visible(False)
 
-def hline(ax, y, xmin=0, xmax=1, color='black', lw=3, clip_on=False):
-    ax.plot([xmin, xmax], [y, y], color=color, linewidth=lw,
-            transform=ax.transAxes, clip_on=clip_on)
+def show_img(ax, fname, x0=0.01, x1=0.99, y0=0.02, y1=0.98):
+    ax.imshow(load(fname), aspect='auto', extent=[x0, x1, y0, y1],
+              origin='upper', zorder=2)
 
-def vline(ax, x, ymin=0, ymax=1, color='black', lw=1, clip_on=False):
-    ax.plot([x, x], [ymin, ymax], color=color, linewidth=lw,
-            transform=ax.transAxes, clip_on=clip_on)
+def hline(ax, y, x0=0, x1=1, color=RULE, lw=1):
+    ax.plot([x0, x1], [y, y], color=color, lw=lw,
+            transform=ax.transAxes, clip_on=False, zorder=10)
 
-# ── HEADER (full width) ───────────────────────────────────────────────────────
-ax_hdr = fig.add_subplot(gs[0, :])
-ax_hdr.set_facecolor(C_HEADER)
-no_ticks(ax_hdr)
+# ─────────────────────────────────────────────────────────────────────────────
+# CANVAS
+# ─────────────────────────────────────────────────────────────────────────────
+fig = plt.figure(figsize=(8.5, 11), dpi=DPI, facecolor=BG)
 
-hline(ax_hdr, y=1.0, color=C_ACCENT, lw=5)
+master = gridspec.GridSpec(
+    4, 1, figure=fig,
+    height_ratios=[1.05, 2.4, 5.4, 2.1],
+    hspace=0.06,
+    left=0.03, right=0.97,
+    top=0.98, bottom=0.02,
+)
 
-ax_hdr.text(0.5, 0.80,
+# ── HEADER ───────────────────────────────────────────────────────────────────
+ax_h = fig.add_subplot(master[0])
+ax_h.set_facecolor(NAVY)
+ax_h.set_xticks([]); ax_h.set_yticks([])
+for s in ax_h.spines.values(): s.set_visible(False)
+
+ax_h.plot([0, 1], [1, 1], color=GREEN, lw=4,
+          transform=ax_h.transAxes, clip_on=False)
+
+ax_h.text(0.5, 0.85,
     'Event-Triggered Acoustic Monitoring via Circular Buffer Simulation',
-    transform=ax_hdr.transAxes, fontsize=11.5, fontweight='bold',
-    color='white', ha='center', va='top')
-ax_hdr.text(0.5, 0.42,
+    transform=ax_h.transAxes,
+    fontsize=11, fontweight='bold', color=WHITE, ha='center', va='top')
+ax_h.text(0.5, 0.44,
     'M M Nishat  ·  University of Southern Mississippi  ·  USM Undergraduate Symposium 2026',
-    transform=ax_hdr.transAxes, fontsize=8, color='#BDC3C7', ha='center', va='top')
-ax_hdr.text(0.5, 0.10,
-    'nishat12sikdar@gmail.com',
-    transform=ax_hdr.transAxes, fontsize=7.5, color=C_ACCENT,
-    ha='center', va='top', fontstyle='italic')
+    transform=ax_h.transAxes,
+    fontsize=7.5, color='#AAB7B8', ha='center', va='top')
+ax_h.text(0.02, 0.10, 'nishat12sikdar@gmail.com',
+    transform=ax_h.transAxes,
+    fontsize=7, color=GREEN, ha='left', va='top', fontstyle='italic')
+ax_h.text(0.98, 0.10, 'April 18, 2026',
+    transform=ax_h.transAxes,
+    fontsize=7, color='#566573', ha='right', va='top')
 
-# ── ABSTRACT (full width) ─────────────────────────────────────────────────────
-ax_abs = fig.add_subplot(gs[1, :])
-ax_abs.set_facecolor(C_PANEL)
-no_ticks(ax_abs)
+# ── ABSTRACT + KEY NUMBERS ───────────────────────────────────────────────────
+ax_abs = fig.add_subplot(master[1])
+clean(ax_abs, bg=OFFWHITE)
 
-ax_abs.add_patch(FancyBboxPatch((0.0, 0.0), 1.0, 1.0,
-    boxstyle='square,pad=0', facecolor=C_PANEL, edgecolor='#CACFD2',
-    linewidth=1, transform=ax_abs.transAxes))
-
-ax_abs.text(0.02, 0.97, 'ABSTRACT', transform=ax_abs.transAxes,
-            fontsize=9, fontweight='bold', color=C_ACCENT, va='top')
+ax_abs.text(0.02, 0.97, 'ABSTRACT',
+    transform=ax_abs.transAxes,
+    fontsize=8.5, fontweight='bold', color=GREEN, va='top')
 
 abstract = (
-    "Continuous audio recording on resource-constrained edge devices wastes storage and power by persisting non-event "
-    "segments. We present a simulation framework evaluating five acoustic monitoring strategies — Store-All, Detect-Only, "
-    "Random baseline, and Circular Buffer at B=1 and B=2 — using the ESC-50 environmental sound dataset. A Random Forest "
-    "classifier (MFCC + delta-MFCC + RMS, 122-dim) achieves 82.5% accuracy on a 10-class subset.\n\n"
-    "Key finding: at the same storage budget as Detect-Only (DRR=69.5%), a random-save baseline captures only 32.5% of "
-    "events — while Detect-Only captures 95.0% (+62.5pp gap). Adding a 1-clip circular buffer raises ECR to 96.7% at "
-    "DRR=46.2%. A buffer ablation study identifies B=1 as the Pareto-optimal point: B=2 gains only +0.8pp ECR at a "
-    "-15.2pp DRR cost."
+    "Acoustic event detection on embedded edge devices faces a fundamental tension: continuous recording "
+    "overflows flash storage, while detection-only logging loses event context. We present a simulation "
+    "framework that treats the circular buffer as a 2D scientific variable — independently sweeping "
+    "pre-event (0–2 s) and post-event (0–4 s) buffer sizes — and evaluates five strategies: Store-All, "
+    "Detect-Only, Fixed Periodic, Pure Random, and Proposed Adaptive. Experiments run under physically "
+    "grounded streaming conditions (Poisson arrivals, SNR=10 dB, 30% overlap). Key finding: Proposed "
+    "Adaptive achieves ECR=97.7% at DRR=73.5%, vs 14.3% ECR for Fixed Periodic at the same storage "
+    "budget. The intelligence gap over Pure Random is +31.8 pp (p=0.0004, Cohen's d=2.59)."
 )
-ax_abs.text(0.02, 0.82, abstract, transform=ax_abs.transAxes,
-            fontsize=8.5, color=C_BODY, va='top', linespacing=1.55,
-            wrap=True)
+ax_abs.text(0.02, 0.85, abstract,
+    transform=ax_abs.transAxes,
+    fontsize=8, color=BODY, va='top', linespacing=1.55, wrap=True)
 
-# Key numbers bar
+# 4 key numbers
+adaptive = rf['Proposed_Adaptive']
 kn = [
-    (f"{model['accuracy']:.0%}", 'Classifier Accuracy'),
-    ('+62.5pp', 'Intelligence Gap'),
-    (f"{sysC1['ECR']:.0%}", 'ECR  (B=1)'),
-    (f"{sysC1['DRR']:.0%}", 'DRR  (B=1)'),
+    (f"{adaptive['ECR']:.0f}%",  'ECR\n(Proposed Adaptive)'),
+    (f"{adaptive['DRR']:.0f}%",  'Data Reduction\n(Proposed Adaptive)'),
+    ('+31.8pp',                   'ECR over\nPure Random'),
+    ('p=0.0004',                  'Statistical\nSignificance'),
 ]
 for i, (val, lbl) in enumerate(kn):
-    x = 0.125 + i * 0.25
-    ax_abs.text(x, 0.18, val, transform=ax_abs.transAxes,
-                fontsize=14, fontweight='bold', color=C_BLUE, ha='center', va='top')
-    ax_abs.text(x, 0.05, lbl, transform=ax_abs.transAxes,
-                fontsize=7.5, color=C_MUTED, ha='center', va='top')
+    x = 0.13 + i * 0.25
+    ax_abs.text(x, 0.22, val,
+        transform=ax_abs.transAxes,
+        fontsize=15, fontweight='bold', color=BLUE, ha='center', va='top')
+    ax_abs.text(x, 0.09, lbl,
+        transform=ax_abs.transAxes,
+        fontsize=7, color=MUTED, ha='center', va='top', linespacing=1.3)
 
-# ── HERO FIGURE ───────────────────────────────────────────────────────────────
-ax_hero = fig.add_subplot(gs[2, 0])
-ax_hero.set_facecolor(C_BG)
-no_ticks(ax_hero)
-ax_hero.text(0.02, 0.99, 'Storage Efficiency vs. Event Capture Trade-off',
-             transform=ax_hero.transAxes, fontsize=8.5, fontweight='bold',
-             color=C_ACCENT, va='top')
-img = mpimg.imread(os.path.join(FIG_DIR, 'fig5_hero_tradeoff.png'))
-ax_hero.imshow(img, aspect='auto',
-               extent=[0.01, 0.99, 0.01, 0.93], transform=ax_hero.transAxes,
-               clip_on=True)
+hline(ax_abs, y=0.27, x0=0.02, x1=0.98, color=RULE, lw=0.8)
 
-# ── COMPARISON TABLE ─────────────────────────────────────────────────────────
-ax_tbl = fig.add_subplot(gs[2, 1])
-ax_tbl.set_facecolor(C_BG)
-no_ticks(ax_tbl)
-ax_tbl.text(0.02, 0.99, 'System Comparison — All Metrics',
-            transform=ax_tbl.transAxes, fontsize=8.5, fontweight='bold',
-            color=C_ACCENT, va='top')
-img2 = mpimg.imread(os.path.join(FIG_DIR, 'fig6_comparison_table.png'))
-ax_tbl.imshow(img2, aspect='auto',
-              extent=[0.01, 0.99, 0.04, 0.93], transform=ax_tbl.transAxes,
-              clip_on=True)
-
-# ── CLASSIFIER METRICS ────────────────────────────────────────────────────────
-ax_cm = fig.add_subplot(gs[3, 0])
-ax_cm.set_facecolor(C_BG)
-no_ticks(ax_cm)
-ax_cm.text(0.02, 0.99, 'Confusion Matrix',
-           transform=ax_cm.transAxes, fontsize=8.5, fontweight='bold',
-           color=C_ACCENT, va='top')
-img3 = mpimg.imread(os.path.join(FIG_DIR, 'fig1_confusion_matrix.png'))
-ax_cm.imshow(img3, aspect='auto',
-             extent=[0.01, 0.99, 0.01, 0.93], transform=ax_cm.transAxes,
-             clip_on=True)
-
-# ── METHODOLOGY + CONCLUSIONS ─────────────────────────────────────────────────
-ax_mc = fig.add_subplot(gs[3, 1])
-ax_mc.set_facecolor(C_PANEL)
-no_ticks(ax_mc)
-
-ax_mc.text(0.03, 0.98, 'METHODOLOGY', transform=ax_mc.transAxes,
-           fontsize=8.5, fontweight='bold', color=C_ACCENT, va='top')
-meth = (
-    "ESC-50 · 10 classes · 400 clips · 122-dim features\n"
-    "(MFCC + Δ-MFCC + RMS)  ·  RF n=200  ·  τ=0.35\n"
-    "5 systems: Store-All · Detect-Only · Random ·\n"
-    "Circ. Buffer B=1 (proposed) · Circ. Buffer B=2"
+# ── FIGURES — 3-panel grid ────────────────────────────────────────────────────
+row_figs = gridspec.GridSpecFromSubplotSpec(
+    2, 3, subplot_spec=master[2],
+    hspace=0.06, wspace=0.04,
 )
-ax_mc.text(0.03, 0.84, meth, transform=ax_mc.transAxes,
-           fontsize=8, color=C_BODY, va='top', linespacing=1.5)
 
-hline(ax_mc, y=0.56, xmin=0.03, xmax=0.97, color='#CACFD2', lw=0.8)
+# Row A: Heatmap (span 2 cols) | Pareto
+ax_heat = fig.add_subplot(row_figs[0, 0:2])
+clean(ax_heat, bg=OFFWHITE)
+ax_heat.text(0.02, 0.98,
+    'Buffer Configuration Sweep — ECR Heatmap',
+    transform=ax_heat.transAxes,
+    fontsize=7.5, fontweight='bold', color=GREEN, va='top')
+show_img(ax_heat, 'figB_buffer_heatmap.png', x0=0.02, x1=0.98, y0=0.03, y1=0.90)
 
-ax_mc.text(0.03, 0.53, 'CONCLUSIONS', transform=ax_mc.transAxes,
-           fontsize=8.5, fontweight='bold', color=C_BLUE, va='top')
-conc = (
-    "1. +62.5pp ECR gap proves detector adds real value.\n"
-    "2. B=1 is Pareto-optimal — B=2 offers diminishing returns.\n"
-    "3. Framework is reproducible with formal metric definitions.\n\n"
-    "Future: on-device latency · continuous stream · DS-CNN."
+ax_pareto = fig.add_subplot(row_figs[0, 2])
+clean(ax_pareto, bg=OFFWHITE)
+ax_pareto.text(0.04, 0.98,
+    'Pareto Frontier',
+    transform=ax_pareto.transAxes,
+    fontsize=7.5, fontweight='bold', color=GREEN, va='top')
+show_img(ax_pareto, 'figA_pareto_frontier.png', x0=0.02, x1=0.98, y0=0.03, y1=0.90)
+
+# Row B: Intelligence gap | System comparison | Classifier
+ax_gap = fig.add_subplot(row_figs[1, 0])
+clean(ax_gap, bg=OFFWHITE)
+ax_gap.text(0.04, 0.98,
+    'Intelligence Gap  (p=0.0004)',
+    transform=ax_gap.transAxes,
+    fontsize=7.5, fontweight='bold', color=GREEN, va='top')
+show_img(ax_gap, 'figH_statistical_analysis.png', x0=0.02, x1=0.98, y0=0.03, y1=0.90)
+
+ax_comp = fig.add_subplot(row_figs[1, 1])
+clean(ax_comp, bg=OFFWHITE)
+ax_comp.text(0.04, 0.98,
+    'System Comparison',
+    transform=ax_comp.transAxes,
+    fontsize=7.5, fontweight='bold', color=GREEN, va='top')
+show_img(ax_comp, 'fig2_drr_ecr_comparison.png', x0=0.02, x1=0.98, y0=0.03, y1=0.90)
+
+ax_clf = fig.add_subplot(row_figs[1, 2])
+clean(ax_clf, bg=OFFWHITE)
+ax_clf.text(0.04, 0.98,
+    'Classifier Performance',
+    transform=ax_clf.transAxes,
+    fontsize=7.5, fontweight='bold', color=GREEN, va='top')
+show_img(ax_clf, 'fig1_confusion_matrix.png', x0=0.02, x1=0.98, y0=0.03, y1=0.90)
+
+# ── FOOTER — Conclusions + Methods + References ───────────────────────────────
+ax_ft = fig.add_subplot(master[3])
+clean(ax_ft, bg=OFFWHITE)
+hline(ax_ft, y=1.0, color=GREEN, lw=3)
+
+# 3 columns
+cols = gridspec.GridSpecFromSubplotSpec(
+    1, 3, subplot_spec=master[3],
+    wspace=0.06,
 )
-ax_mc.text(0.03, 0.40, conc, transform=ax_mc.transAxes,
-           fontsize=8, color=C_BODY, va='top', linespacing=1.55)
 
-hline(ax_mc, y=0.10, xmin=0.03, xmax=0.97, color='#CACFD2', lw=0.8)
-ax_mc.text(0.03, 0.08, 'ESC-50: Piczak (2015)  ·  sklearn Random Forest',
-           transform=ax_mc.transAxes, fontsize=7, color=C_MUTED, va='top')
+ax_c1 = fig.add_subplot(cols[0])
+clean(ax_c1, bg=OFFWHITE)
+ax_c1.text(0.04, 0.96, 'CONCLUSIONS', transform=ax_c1.transAxes,
+           fontsize=7.5, fontweight='bold', color=GREEN, va='top')
+ax_c1.text(0.04, 0.82,
+    '1. Pre-event buffer drives ECR gains;\n'
+    '    post-event saturates past 1 s.\n'
+    '2. Adaptive achieves Pareto-optimal\n'
+    '    region with 95% CI overlap.\n'
+    '3. Intelligence gap vs. random:\n'
+    '    +31.8 pp (p=0.0004, d=2.59).',
+    transform=ax_c1.transAxes,
+    fontsize=7.2, color=BODY, va='top', linespacing=1.45)
 
-# ── FOOTER ────────────────────────────────────────────────────────────────────
-ax_ftr = fig.add_subplot(gs[4, :])
-ax_ftr.set_facecolor(C_HEADER)
-no_ticks(ax_ftr)
+ax_c2 = fig.add_subplot(cols[1])
+clean(ax_c2, bg=OFFWHITE)
+ax_c2.text(0.04, 0.96, 'METHODOLOGY', transform=ax_c2.transAxes,
+           fontsize=7.5, fontweight='bold', color=GREEN, va='top')
+ax_c2.text(0.04, 0.82,
+    'ESC-50  ·  10 classes  ·  400 clips (5 s)\n'
+    '122-dim features: MFCC+Δ+RMS\n'
+    'Random Forest (n=200, τ=0.35)\n'
+    'Streaming: Poisson, SNR=10 dB,\n'
+    '30% overlap  ·  5 systems compared\n'
+    'Metrics: ECR · DRR · FPR · Cohen\'s d',
+    transform=ax_c2.transAxes,
+    fontsize=7.2, color=BODY, va='top', linespacing=1.45)
 
-hline(ax_ftr, y=1.0, color=C_ACCENT, lw=3)
+ax_c3 = fig.add_subplot(cols[2])
+clean(ax_c3, bg=OFFWHITE)
+ax_c3.text(0.04, 0.96, 'FUTURE WORK', transform=ax_c3.transAxes,
+           fontsize=7.5, fontweight='bold', color=GREEN, va='top')
+ax_c3.text(0.04, 0.82,
+    '→  On-device deployment (Arduino/ESP32)\n'
+    '→  Measure inference latency on MCU\n'
+    '→  Replace RF with quantized DS-CNN\n'
+    '→  Evaluate on continuous real stream\n\n'
+    'ESC-50: Piczak (ACM MM 2015)\n'
+    'Framework: PlaylistEngine (this work)',
+    transform=ax_c3.transAxes,
+    fontsize=7.2, color=BODY, va='top', linespacing=1.45)
 
-ax_ftr.text(0.5, 0.65,
-    'TinyML · Acoustic Event Detection · Edge Computing · Environmental Monitoring · Circular Buffer · ESC-50',
-    transform=ax_ftr.transAxes, fontsize=7.5, color='#BDC3C7',
-    ha='center', va='top')
-ax_ftr.text(0.5, 0.18,
-    'University of Southern Mississippi  ·  Department of Computer Science  ·  nishat12sikdar@gmail.com',
-    transform=ax_ftr.transAxes, fontsize=7, color='#7F8C8D',
-    ha='center', va='top')
-
-# ── SAVE ──────────────────────────────────────────────────────────────────────
-plt.savefig(OUT, dpi=DPI, bbox_inches='tight', facecolor=C_BG)
+# ─────────────────────────────────────────────────────────────────────────────
+plt.savefig(OUT, dpi=DPI, bbox_inches='tight', facecolor=BG)
 plt.close()
-print(f"Handout saved → {OUT}")
-print(f"Size: 8.5\" × 11\" Letter at {DPI} dpi  ({int(8.5*DPI)} × {11*DPI} px)")
+print(f"Saved → {OUT}")
+print(f"8.5\" × 11\" @ {DPI} dpi  (850 × 1100 px)")
