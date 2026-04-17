@@ -31,7 +31,8 @@ from tqdm import tqdm
 # CONFIG
 # ─────────────────────────────────────────────────────────────────────────────
 BASE   = os.path.dirname(os.path.abspath(__file__))
-DATA   = os.path.join(BASE, 'data', 'ESC-50-master')
+DATA_ESC50 = os.path.join(BASE, 'data', 'ESC-50-master')
+DATA_US8K  = os.path.join(BASE, 'data', 'UrbanSound8K')
 FIG    = os.path.join(BASE, 'figures')
 RES    = os.path.join(BASE, 'results')
 os.makedirs(FIG, exist_ok=True)
@@ -58,17 +59,18 @@ THRESHOLD  = 0.35
 
 N_RUNS = 5
 STREAM_MINUTES = 15
+DATASET_TO_USE = 'ESC-50' # Options: 'ESC-50', 'US8K'
 
 # ─────────────────────────────────────────────────────────────────────────────
 # STEP 1: LOAD DATASET
 # ─────────────────────────────────────────────────────────────────────────────
-def load_dataset():
+def load_esc50():
     print("\n[1/7] Loading ESC-50 dataset...")
-    meta  = pd.read_csv(os.path.join(DATA, 'meta', 'esc50.csv'))
-    audio = os.path.join(DATA, 'audio')
+    meta  = pd.read_csv(os.path.join(DATA_ESC50, 'meta', 'esc50.csv'))
+    audio = os.path.join(DATA_ESC50, 'audio')
     records = []
     
-    for _, row in tqdm(meta.iterrows(), total=len(meta), desc='  Filtering'):
+    for _, row in tqdm(meta.iterrows(), total=len(meta), desc='  Filtering ESC-50'):
         cat = row['category']
         if cat not in TARGET_CATEGORIES: continue
         fp = os.path.join(audio, row['filename'])
@@ -78,7 +80,41 @@ def load_dataset():
     df = pd.DataFrame(records)
     df_train = df[df['fold'].isin([1, 2, 3])]
     df_test  = df[df['fold'].isin([4, 5])]
-    print(f"  Train: {len(df_train)} clips | Stream/Test: {len(df_test)} clips")
+    print(f"  ESC-50 Train: {len(df_train)} clips | Stream/Test: {len(df_test)} clips")
+    return df_train, df_test
+
+def load_us8k():
+    print("\n[1/7] Loading UrbanSound8K dataset...")
+    csv_path = os.path.join(DATA_US8K, 'metadata', 'UrbanSound8K.csv')
+    audio_dir = os.path.join(DATA_US8K, 'audio')
+    
+    if not os.path.exists(csv_path):
+        print("  [WARNING] UrbanSound8K dataset not found! Please download it to data/UrbanSound8K/")
+        return pd.DataFrame(), pd.DataFrame()
+        
+    meta = pd.read_csv(csv_path)
+    records = []
+    
+    # Event classes: siren (8), drilling (4), jackhammer (7), gun_shot (6)
+    us8k_events = [4, 6, 7, 8]
+    
+    for _, row in tqdm(meta.iterrows(), total=len(meta), desc='  Filtering US8K'):
+        fold = row['fold']
+        fp = os.path.join(audio_dir, f"fold{fold}", row['slice_file_name'])
+        label = 'event' if row['classID'] in us8k_events else 'non_event'
+        
+        # We only take clips that actually exist on disk
+        if os.path.exists(fp):
+            records.append({
+                'filename': row['slice_file_name'], 'filepath': fp,
+                'category': row['class'], 'label': label, 'fold': fold
+            })
+            
+    df = pd.DataFrame(records)
+    # Split across 10 folds
+    df_train = df[df['fold'].isin([1, 2, 3, 4, 5, 6])]
+    df_test  = df[df['fold'].isin([7, 8, 9, 10])]
+    print(f"  US8K Train: {len(df_train)} clips | Stream/Test: {len(df_test)} clips")
     return df_train, df_test
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -223,6 +259,13 @@ def run_stability_experiments(df_ts, clf, scaler):
         k_saved = sysB['saved']
         step = max(1, nw // k_saved) if k_saved > 0 else nw
         configs.append(compute_sys_metrics('Fixed_Periodic', set(range(0, nw, step)[:k_saved]), y_true_w, nw))
+
+        # Pure Random Baseline (Matches Detect-Only budget but arbitrary indices)
+        if k_saved > 0:
+            rand_set = set(np.random.choice(nw, size=min(k_saved, nw), replace=False))
+        else:
+            rand_set = set()
+        configs.append(compute_sys_metrics('Pure_Random', rand_set, y_true_w, nw))
         
         # Sweeps (Pareto Frontier Contexts)
         for (pw, pow) in [(1,1), (2,2), (2,4), (4,6)]:
@@ -360,7 +403,14 @@ if __name__ == '__main__':
     print("  Note: NO new ML algorithm proposed. Investigating systems tradeoffs.")
     print("="*75)
     
-    df_tr, df_ts = load_dataset()
+    if DATASET_TO_USE == 'ESC-50':
+        df_tr, df_ts = load_esc50()
+    else:
+        df_tr, df_ts = load_us8k()
+        
+    if df_tr.empty:
+        print("Exiting pipeline due to missing data.")
+        exit(1)
     X_tr, y_tr = extract_train_features(df_tr)
     clf, scaler, mod_metrics = train_classifier(X_tr, y_tr)
     
